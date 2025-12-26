@@ -5,14 +5,15 @@
     padding: 0;
 }
 
-/* Body */
+/* Body - FIXED LAYOUT */
 body {
     font-family: "Inter", "Segoe UI", Arial, sans-serif;
     background: linear-gradient(135deg, #eef2f7, #dfe7f2);
     min-height: 100vh;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column; /* Stack items vertically */
+    align-items: center;    /* Center horizontally */
+    padding: 40px 20px;     /* Give some breathing room at top/bottom */
     color: #1f2937;
 }
 
@@ -20,7 +21,9 @@ body {
 .container {
     width: 100%;
     max-width: 700px;
-    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Space between cards */
 }
 
 /* Card */
@@ -28,19 +31,8 @@ body {
     background: #ffffff;
     border-radius: 14px;
     padding: 30px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-}
-
-/* Headings */
-h1 {
-    font-size: 26px;
-    margin-bottom: 6px;
-}
-
-.subtitle {
-    color: #6b7280;
-    font-size: 14px;
-    margin-bottom: 25px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    width: 100%;
 }
 
 /* Form Layout */
@@ -56,160 +48,52 @@ h1 {
     }
 }
 
-/* Form Group */
-.form-group {
-    display: flex;
-    flex-direction: column;
-}
-
-/* Labels */
-label {
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 6px;
-    color: #374151;
-}
-
-/* Select */
-select {
-    padding: 12px 14px;
-    font-size: 14px;
-    border-radius: 10px;
-    border: 1px solid #d1d5db;
-    background-color: #f9fafb;
-    transition: all 0.2s ease;
-    appearance: none;
-}
-
-/* Focus */
-select:focus {
-    outline: none;
-    border-color: #2563eb;
-    background-color: #ffffff;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-}
-
-/* Disabled */
-select:disabled {
-    background-color: #f3f4f6;
-    color: #9ca3af;
-    cursor: not-allowed;
-}
-
-/* Hover */
-select:not(:disabled):hover {
-    border-color: #2563eb;
-}
-
-h2 {
-    font-size: 18px;
-    margin-bottom: 16px;
-}
-
-.form-column {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-
-.input-row {
-    display: flex;
-    gap: 10px;
-}
-
-.input-row input {
-    flex: 3;
-}
-
-.input-row select {
-    flex: 1;
-}
-
+/* Select & Input Fixes */
 input[type="number"], select {
-    padding: 14px;
+    width: 100%;
+    padding: 12px;
     font-size: 15px;
     border-radius: 10px;
     border: 1px solid #d1d5db;
     background-color: #f9fafb;
+    /* Removed appearance: none; to keep the arrow for usability */
 }
 
+/* Interactive States */
 input:focus, select:focus {
     outline: none;
     border-color: #2563eb;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
-.primary-btn {
-    margin-top: 10px;
-    padding: 14px;
-    font-size: 16px;
-    font-weight: 600;
-    border-radius: 12px;
-    background: #2563eb;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.primary-btn:hover {
-    background: #1e40af;
-}
-
-#inputPanel {
-    transition: opacity 0.3s ease, max-height 0.3s ease;
-    overflow: hidden;
-    max-height: 0;
+/* Panel Animations - FIXED */
+#inputPanel, #resultsPanel {
+    display: none; /* Default to hidden */
     opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.4s ease;
 }
 
-#inputPanel.show {
-    max-height: 1000px; /* large enough to fit content */
+/* Use this class in JS: element.classList.add('show') 
+   instead of element.style.display = 'block' */
+#inputPanel.show, #resultsPanel.show {
+    display: block;
     opacity: 1;
+    transform: translateY(0);
 }
 
-
+/* Results Table Styling */
 #resultsTable {
     width: 100%;
     border-collapse: collapse;
-    font-size: 15px;
+    margin-top: 15px;
 }
 
 #resultsTable th, #resultsTable td {
-    padding: 12px 15px;
+    padding: 14px;
     text-align: left;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #f3f4f6;
 }
 
-#resultsTable th {
-    background-color: #f3f4f6;
-    font-weight: 600;
-}
-
-#resultsTable tr:hover {
-    background-color: #f1f5f9;
-}
-
-
-#resultsPanel {
-    transition: opacity 0.3s ease, max-height 0.3s ease;
-    opacity: 0;
-    max-height: 0;
-    overflow: hidden;
-}
-
-#resultsPanel.show {
-    opacity: 1;
-    max-height: 1000px;
-}
-
-.warning {
-    color: #b91c1c;       /* red */
-    font-weight: 600;
-}
-
-.safe {
-    color: #047857;       /* green */
-    font-weight: 600;
-}
-
+.warning { color: #dc2626; font-weight: 700; }
+.safe { color: #059669; font-weight: 700; }
