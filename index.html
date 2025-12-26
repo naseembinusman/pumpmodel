@@ -31,6 +31,41 @@
     </div>
 </div>
 
+<div class="card">
+  <h2>Duty Input</h2>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Rated Flow (US GPM)</label>
+      <input type="number" id="ratedFlow" placeholder="e.g. 500">
+    </div>
+
+    <div class="form-group">
+      <label>Rated Pressure Unit</label>
+      <select id="pressureUnit">
+        <option value="m">Meter</option>
+        <option value="bar">Bar</option>
+        <option value="psi">PSI</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Rated Head / Pressure</label>
+      <input type="number" id="ratedHead" placeholder="e.g. 75">
+    </div>
+
+    <div class="form-group">
+      <label>Rated Speed (RPM)</label>
+      <input type="number" id="ratedRPM" placeholder="e.g. 2950">
+    </div>
+  </div>
+
+  <button id="calculateBtn">Calculate</button>
+</div>
+
+
 <script src="js/pump-selector.js"></script>
 </body>
 </html>
