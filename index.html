@@ -2,26 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Pump Selection</title>
+    <title>Pump Selector</title>
     <link rel="stylesheet" href="css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 
-<h2>Pump Selection</h2>
+<div class="container">
+    <div class="card">
+        <h1>Pump Selector</h1>
+        <p class="subtitle">Select rated flow to view available pump models</p>
 
-<div class="row">
-    <div>
-        <label>Rated Flow</label><br>
-        <select id="flowSelect">
-            <option value="">-- Select Flow --</option>
-        </select>
-    </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="flowSelect">Rated Flow (GPM)</label>
+                <select id="flowSelect">
+                    <option value="">Select Flow</option>
+                </select>
+            </div>
 
-    <div>
-        <label>Pump Model</label><br>
-        <select id="modelSelect" disabled>
-            <option value="">-- Select Pump Model --</option>
-        </select>
+            <div class="form-group">
+                <label for="modelSelect">Pump Model</label>
+                <select id="modelSelect" disabled>
+                    <option value="">Select Pump Model</option>
+                </select>
+            </div>
+        </div>
     </div>
 </div>
 
