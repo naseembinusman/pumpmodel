@@ -41,3 +41,59 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(err => console.error("Failed to load XML", err));
 });
+
+
+let minDB, maxDB;
+
+async function loadXML(path) {
+    const res = await fetch(path);
+    const text = await res.text();
+    return new DOMParser().parseFromString(text, "text/xml");
+}
+
+async function loadDatabases() {
+    minDB = await loadXML("data/min.xml");
+    maxDB = await loadXML("data/max.xml");
+}
+
+loadDatabases();
+
+const modelSelect = document.getElementById("modelSelect");
+
+modelSelect.addEventListener("change", () => {
+    const modelName = modelSelect.value;
+    if (!modelName) return;
+
+    const minData = getPumpData(minDB, modelName);
+    const maxData = getPumpData(maxDB, modelName);
+
+    console.log("MIN IMPELLER DATA:", minData);
+    console.log("MAX IMPELLER DATA:", maxData);
+
+    // Later you can:
+    // draw curves
+    // interpolate head
+    // calculate power
+});
+
+function getPumpData(xmlDoc, modelName) {
+    const pump = xmlDoc.querySelector(`PumpModel[name="${modelName}"]`);
+    if (!pump) {
+        console.warn(`Pump ${modelName} not found`);
+        return null;
+    }
+
+    const points = [];
+    const dataPoints = pump.querySelectorAll("DataPoint");
+
+    dataPoints.forEach(dp => {
+        points.push({
+            gpm: parseFloat(dp.querySelector("GPM").textContent),
+            head: parseFloat(dp.querySelector("M").textContent),
+            kw: parseFloat(dp.querySelector("KW").textContent)
+        });
+    });
+
+    return points;
+}
+
