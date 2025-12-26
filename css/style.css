@@ -168,3 +168,24 @@ input:focus, select:focus {
     opacity: 1;
 }
 
+
+#resultsTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+}
+
+#resultsTable th, #resultsTable td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+#resultsTable th {
+    background-color: #f3f4f6;
+    font-weight: 600;
+}
+
+#resultsTable tr:hover {
+    background-color: #f1f5f9;
+}
