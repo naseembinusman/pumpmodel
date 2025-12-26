@@ -236,17 +236,13 @@ const { dMin, dMax } = range;
 
 });
 
-function printResults(model, curve, unit, ratedFlow) {
-
-  // Ensure curve sorted by flow
+function printResults(model, curve, unit, ratedFlow, impeller) {
   const sorted = [...curve].sort((a, b) => a.flow - b.flow);
 
-  // Interpolate helper
   const interp = (flow, key) => {
     for (let i = 0; i < sorted.length - 1; i++) {
       const p1 = sorted[i];
       const p2 = sorted[i + 1];
-
       if (flow >= p1.flow && flow <= p2.flow) {
         return interpolate(flow, p1.flow, p1[key], p2.flow, p2[key]);
       }
@@ -254,38 +250,41 @@ function printResults(model, curve, unit, ratedFlow) {
     return null;
   };
 
-  // --- Rated point ---
   const ratedHead = interp(ratedFlow, "head");
   const ratedPower = interp(ratedFlow, "power");
-
-  // --- Churn (0 flow) ---
-  const churnFlow = 0;
-  const churnHead = interp(churnFlow, "head");
-
-  // --- 150% flow ---
-  const flow150 = ratedFlow * 1.5;
-  const head150 = interp(flow150, "head");
-  const power150 = interp(flow150, "power");
-
-  if (
-    ratedHead === null ||
-    churnHead === null ||
-    head150 === null
-  ) {
-    alert("Required points are outside pump curve range");
-    return;
-  }
-
+  const churnHead = interp(0, "head");
+  const head150 = interp(ratedFlow * 1.5, "head");
+  const power150 = interp(ratedFlow * 1.5, "power");
   const maxPower = Math.max(...sorted.map(p => p.power));
 
-  console.table({
-    "Pump Model": model,
-    "Rated Flow (GPM)": ratedFlow.toFixed(1),
-    "Rated Pressure": meterToUnit(ratedHead, unit).toFixed(2),
-    "Churn Pressure": meterToUnit(churnHead, unit).toFixed(2),
-    "Pressure @150%": meterToUnit(head150, unit).toFixed(2),
-    "Power @Rated (kW)": ratedPower.toFixed(2),
-    "Power @150% (kW)": power150.toFixed(2),
-    "Max Power (kW)": maxPower.toFixed(2)
+  const resultsPanel = document.getElementById("resultsPanel");
+  const tbody = document.getElementById("resultsTable").querySelector("tbody");
+
+  tbody.innerHTML = ""; // clear previous results
+
+  const rows = [
+    ["Pump Model", model],
+    ["Rated Flow (GPM)", ratedFlow.toFixed(1)],
+    ["Rated Pressure (" + unit + ")", meterToUnit(ratedHead, unit).toFixed(2)],
+    ["Churn Pressure (" + unit + ")", meterToUnit(churnHead, unit).toFixed(2)],
+    ["Pressure @150%", meterToUnit(head150, unit).toFixed(2)],
+    ["Power @Rated (kW)", ratedPower.toFixed(2)],
+    ["Power @150% (kW)", power150.toFixed(2)],
+    ["Max Power (kW)", maxPower.toFixed(2)],
+    ["Calculated Impeller Diameter", impeller.toFixed(2)]
+  ];
+
+  rows.forEach(([param, value]) => {
+    const tr = document.createElement("tr");
+    const td1 = document.createElement("td");
+    td1.textContent = param;
+    const td2 = document.createElement("td");
+    td2.textContent = value;
+    tr.appendChild(td1);
+    tr.appendChild(td2);
+    tbody.appendChild(tr);
   });
+
+  // Show the panel
+  resultsPanel.style.display = "block";
 }
