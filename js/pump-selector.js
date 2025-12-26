@@ -67,13 +67,6 @@ modelSelect.addEventListener("change", () => {
     const minData = getPumpData(minDB, modelName);
     const maxData = getPumpData(maxDB, modelName);
 
-    console.log("MIN IMPELLER DATA:", minData);
-    console.log("MAX IMPELLER DATA:", maxData);
-
-    // Later you can:
-    // draw curves
-    // interpolate head
-    // calculate power
 });
 
 function getPumpData(xmlDoc, modelName) {
@@ -221,7 +214,8 @@ document.getElementById("calculateBtn").addEventListener("click", () => {
   head_r = ratedCurve.map(p => p.head);
   power_r = ratedCurve.map(p => p.power);
 
-  printResults(model, ratedCurve, unit);
+  printResults(model, ratedCurve, unit, ratedFlow);
+
 });
 
 function printResults(model, curve, unit, ratedFlow) {
