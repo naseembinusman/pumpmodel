@@ -1,6 +1,9 @@
+let flowSelect;
+let modelSelect;
+
 document.addEventListener("DOMContentLoaded", () => {
-    const flowSelect = document.getElementById("flowSelect");
-    const modelSelect = document.getElementById("modelSelect");
+    flowSelect = document.getElementById("flowSelect");
+    modelSelect = document.getElementById("modelSelect");
 
     fetch("data/pumps.xml")
         .then(res => res.text())
@@ -60,6 +63,10 @@ async function loadDatabases() {
 loadDatabases();
 
 function getImpellerRange(modelName) {
+    if (!impellerDB) {
+      alert("Database still loading, please wait");
+      return;
+    }
   const pumps = impellerDB.querySelectorAll("Pump");
   for (let pump of pumps) {
     const name = pump.querySelector("Model").textContent.trim();
@@ -205,38 +212,28 @@ if (!range) {
 }
 const { dMin, dMax } = range;
 
-  const impeller = calculateImpellerDiameter(
-    ratedHeadM, Hmin, Hmax, dMin, dMax
-  );
+  const impeller = calculateImpellerDiameter(ratedHeadM, Hmin, Hmax, dMin, dMax);
 
   if (!impeller) {
     return alert("Required head is outside impeller range");
   }
+  
+    const ratedCurve = minCurve.map((p, i) => {
+      const hMin = minCurve[i].head;
+      const hMax = maxCurve[i].head;
+    
+      const blendedHead =
+        hMin + (impeller ** 2 - dMin ** 2) /
+        (dMax ** 2 - dMin ** 2) * (hMax - hMin);
+    
+      return applySpeedCorrection(p.gpm, blendedHead, p.kw, baseRPM, ratedRPM);
+    });
 
-  // Speed correction
-  const ratedCurve = minCurve.map(p => {
-    const blendedHead = Hmin + (impeller ** 2 - dMin ** 2) /
-      (dMax ** 2 - dMin ** 2) * (Hmax - Hmin);
-
-    return applySpeedCorrection(
-      p.gpm,
-      blendedHead,
-      p.kw,
-      baseRPM,
-      ratedRPM
-    );
-  });
-
-    const range = getImpellerRange(model);
     if (!range) {
       alert("Impeller range not found");
       return;
     }
     
-    const { dMin, dMax } = range;
-    
-    // calculate impeller as before
-    const impeller = calculateImpellerDiameter(ratedHeadM, Hmin, Hmax, dMin, dMax);
     
     // Print results with warnings
     printResults(model, ratedCurve, unit, ratedFlow, impeller, dMin, dMax);
@@ -259,7 +256,7 @@ function printResults(model, curve, unit, ratedFlow, impeller, dMin, dMax) {
 
   const ratedHead = interp(ratedFlow, "head");
   const ratedPower = interp(ratedFlow, "power");
-  const churnHead = interp(0, "head");
+  const churnHead = sorted[0].head;
   const flow150 = ratedFlow * 1.5;
   const head150 = interp(flow150, "head");
   const power150 = interp(flow150, "power");
@@ -293,7 +290,7 @@ function printResults(model, curve, unit, ratedFlow, impeller, dMin, dMax) {
   addRow("Rated Pressure (" + unit + ")", meterToUnit(ratedHead, unit).toFixed(2));
   addRow("Churn Pressure (" + unit + ")", meterToUnit(churnHead, unit).toFixed(2));
   addRow("Pressure @150%", head150 !== null ? meterToUnit(head150, unit).toFixed(2) : "Out of Curve", flow150Warning);
-  addRow("Power @Rated (kW)", ratedPower.toFixed(2));
+  addRow("Power @Rated (kW)", ratedPower ? ratedPower.toFixed(2) : "N/A");
   addRow("Power @150% (kW)", power150 !== null ? power150.toFixed(2) : "Out of Curve", flow150Warning);
   addRow("Max Power (kW)", maxPower.toFixed(2));
   addRow("Calculated Impeller Diameter", impeller.toFixed(2), impellerWarning);
