@@ -79,8 +79,6 @@ function getImpellerRange(modelName) {
   return null;
 }
 
-const modelSelect = document.getElementById("modelSelect");
-
 modelSelect.addEventListener("change", () => {
     const modelName = modelSelect.value;
     if (!modelName) return;
