@@ -162,35 +162,45 @@ function applySpeedCorrection(flow, head, power, baseRPM, ratedRPM) {
 document.getElementById("calculateBtn").addEventListener("click", () => {
 
   const model = modelSelect.value;
-  const ratedFlow = parseFloat(ratedFlowInput.value);
-  const ratedRPM = parseFloat(ratedRPMInput.value);
-  const unit = pressureUnit.value;
+  const ratedFlow = parseFloat(flowSelect.value);
+  const ratedRPM = parseFloat(document.getElementById("ratedRPM").value);
+  const unit = document.getElementById("pressureUnit").value;
 
   const ratedHeadM = headToMeter(
-    parseFloat(ratedHeadInput.value),
+    parseFloat(document.getElementById("ratedHead").value),
     unit
   );
+
+  if (!model || !ratedFlow || !ratedRPM || !ratedHeadM) {
+    return alert("Please complete all inputs");
+  }
 
   const baseRPM = getBaseSpeed(model);
 
   const minCurve = getPumpData(minDB, model);
   const maxCurve = getPumpData(maxDB, model);
 
-  if (!minCurve || !maxCurve) return alert("Pump data missing");
+  if (!minCurve || !maxCurve) {
+    return alert("Pump database not found");
+  }
 
-  // Head at rated flow
   const Hmin = getValueAtFlow(minCurve, ratedFlow, "head");
   const Hmax = getValueAtFlow(maxCurve, ratedFlow, "head");
 
-  // Example impeller diameters (replace from XML if available)
-  const dMin = 200;
+  if (Hmin === null || Hmax === null) {
+    return alert("Rated flow is outside pump curve range");
+  }
+
+  const dMin = 200;  // later from XML
   const dMax = 250;
 
   const impeller = calculateImpellerDiameter(
     ratedHeadM, Hmin, Hmax, dMin, dMax
   );
 
-  if (!impeller) return alert("Duty outside pump envelope");
+  if (!impeller) {
+    return alert("Required head is outside impeller range");
+  }
 
   // Speed correction
   const ratedCurve = minCurve.map(p => {
