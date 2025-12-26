@@ -189,3 +189,16 @@ input:focus, select:focus {
 #resultsTable tr:hover {
     background-color: #f1f5f9;
 }
+
+
+#resultsPanel {
+    transition: opacity 0.3s ease, max-height 0.3s ease;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+}
+
+#resultsPanel.show {
+    opacity: 1;
+    max-height: 1000px;
+}
