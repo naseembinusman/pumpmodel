@@ -5,85 +5,93 @@
     <title>Al Aman UL Listed Pump Selector by Naseem Usman</title>
     <link rel="stylesheet" href="css/style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Ensuring the logo stays centered and fits all screens */
+        .header-container {
+            text-align: center;
+            padding: 20px 0;
+            width: 100%;
+        }
+        .logo {
+            max-width: 100%;    /* Prevents it from being wider than the screen */
+            height: auto;       /* Keeps the aspect ratio */
+            width: 600px;       /* Set a reasonable maximum width */
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
 </head>
 <body>
-    <header style="text-align:center;">
+
+    <header class="header-container">
         <img src="https://raw.githubusercontent.com/naseembinusman/naseembinusman.github.io/29a279258d0bffa8168a23a112b225c4b85244a2/Logo.png" 
              alt="Company Logo" 
-             class="logo" 
-             style="width:1000px; height:211px; display:block; margin:0 auto;" />
+             class="logo" />
     </header>
-    <br>
+
     <div class="container">
         <div class="card">      
-        <h1>Al Aman Fire Pump Selector</h1>
-    <p class="subtitle">Select rated flow and pump model</p>
+            <h1>Al Aman Fire Pump Selector</h1>
+            <p class="subtitle">Select rated flow and pump model</p>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label>Rated Flow (GPM)</label>
-        <select id="flowSelect">
-          <option value="">Select Flow</option>
-        </select>
-      </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Rated Flow (GPM)</label>
+                    <select id="flowSelect">
+                        <option value="">Select Flow</option>
+                    </select>
+                </div>
 
-      <div class="form-group">
-        <label>Pump Model</label>
-        <select id="modelSelect" disabled>
-          <option value="">Select Pump Model</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <!-- Input Panel -->
-  <div class="card" id="inputPanel" style="display: none;">
-    <h2>Duty Point Inputs</h2>
-
-    <div class="form-column">
-      <div class="form-group">        
-        <div class="input-row">
-          <label>Rated Head / Pressure</label>
-          <input type="number" id="ratedHead" placeholder="Enter head">
-          <select id="pressureUnit">
-            <option value="m">m</option>
-            <option value="bar">bar</option>
-            <option value="psi">psi</option>
-          </select>
+                <div class="form-group">
+                    <label>Pump Model</label>
+                    <select id="modelSelect" disabled>
+                        <option value="">Select Pump Model</option>
+                    </select>
+                </div>
+            </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label>Rated Speed (RPM)</label>
-        <input type="number" id="ratedRPM" value="2900" placeholder="Enter RPM">
-      </div>
+        <div class="card" id="inputPanel" style="display: none;">
+            <h2>Duty Point Inputs</h2>
+            <div class="form-column">
+                <div class="form-group">        
+                    <div class="input-row">
+                        <label>Rated Head / Pressure</label>
+                        <input type="number" id="ratedHead" placeholder="Enter head">
+                        <select id="pressureUnit">
+                            <option value="m">m</option>
+                            <option value="bar">bar</option>
+                            <option value="psi">psi</option>
+                        </select>
+                    </div>
+                </div>
 
-      <button id="calculateBtn" class="primary-btn">
-        Calculate Pump Selection
-      </button>
+                <div class="form-group">
+                    <label>Rated Speed (RPM)</label>
+                    <input type="number" id="ratedRPM" value="2900" placeholder="Enter RPM">
+                </div>
+
+                <button id="calculateBtn" class="primary-btn">
+                    Calculate Pump Selection
+                </button>
+            </div>
+        </div>
+
+        <div class="card" id="resultsPanel" style="display: none;">
+            <h2>Pump Selection Results</h2>
+            <table id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
     </div>
-  </div>
-</div>
 
-<!-- Results Panel -->
-<div class="card" id="resultsPanel" style="display: none;">
-  <h2>Pump Selection Results</h2>
-  <table id="resultsTable">
-    <thead>
-      <tr>
-        <th>Parameter</th>
-        <th>Value</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Results will be inserted dynamically -->
-    </tbody>
-  </table>
-</div>
-
-
-
-
-<script src="js/pump-selector.js"></script>
+    <script src="js/pump-selector.js"></script>
 </body>
 </html>
