@@ -50,14 +50,22 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch(err => console.error("Failed to load XML", err));
 });
 
-
+let minDB, maxDB;
 let impellerDB;
 
-async function loadImpellerDatabase() {
-  impellerDB = await loadXML("data/impeller.xml");
+async function loadXML(path) {
+    const res = await fetch(path);
+    const text = await res.text();
+    return new DOMParser().parseFromString(text, "text/xml");
 }
 
-loadImpellerDatabase();
+async function loadDatabases() {
+    minDB = await loadXML("data/min.xml");
+    maxDB = await loadXML("data/max.xml");
+    impellerDB = await loadXML("data/impeller.xml");
+}
+
+loadDatabases();
 
 function getImpellerRange(modelName) {
   const pumps = impellerDB.querySelectorAll("Pump");
