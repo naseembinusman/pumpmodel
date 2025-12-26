@@ -232,7 +232,7 @@ const { dMin, dMax } = range;
   head_r = ratedCurve.map(p => p.head);
   power_r = ratedCurve.map(p => p.power);
 
-  printResults(model, ratedCurve, unit, ratedFlow);
+  printResults(model, ratedCurve, unit, ratedFlow, impeller);
 
 });
 
