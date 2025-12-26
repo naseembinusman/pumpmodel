@@ -202,3 +202,14 @@ input:focus, select:focus {
     opacity: 1;
     max-height: 1000px;
 }
+
+.warning {
+    color: #b91c1c;       /* red */
+    font-weight: 600;
+}
+
+.safe {
+    color: #047857;       /* green */
+    font-weight: 600;
+}
+
