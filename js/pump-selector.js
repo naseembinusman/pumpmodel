@@ -224,20 +224,56 @@ document.getElementById("calculateBtn").addEventListener("click", () => {
   printResults(model, ratedCurve, unit);
 });
 
-function printResults(model, curve, unit) {
+function printResults(model, curve, unit, ratedFlow) {
 
-  const rated = curve[1];
-  const churn = curve[0];
-  const flow150 = curve.find(p => p.flow >= rated.flow * 1.5);
+  // Ensure curve sorted by flow
+  const sorted = [...curve].sort((a, b) => a.flow - b.flow);
+
+  // Interpolate helper
+  const interp = (flow, key) => {
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const p1 = sorted[i];
+      const p2 = sorted[i + 1];
+
+      if (flow >= p1.flow && flow <= p2.flow) {
+        return interpolate(flow, p1.flow, p1[key], p2.flow, p2[key]);
+      }
+    }
+    return null;
+  };
+
+  // --- Rated point ---
+  const ratedHead = interp(ratedFlow, "head");
+  const ratedPower = interp(ratedFlow, "power");
+
+  // --- Churn (0 flow) ---
+  const churnFlow = 0;
+  const churnHead = interp(churnFlow, "head");
+
+  // --- 150% flow ---
+  const flow150 = ratedFlow * 1.5;
+  const head150 = interp(flow150, "head");
+  const power150 = interp(flow150, "power");
+
+  if (
+    ratedHead === null ||
+    churnHead === null ||
+    head150 === null
+  ) {
+    alert("Required points are outside pump curve range");
+    return;
+  }
+
+  const maxPower = Math.max(...sorted.map(p => p.power));
 
   console.table({
     "Pump Model": model,
-    "Rated Flow (GPM)": rated.flow.toFixed(1),
-    "Rated Pressure": meterToUnit(rated.head, unit).toFixed(2),
-    "Churn Pressure": meterToUnit(churn.head, unit).toFixed(2),
-    "Pressure @150%": meterToUnit(flow150.head, unit).toFixed(2),
-    "Power @Rated (kW)": rated.power.toFixed(2),
-    "Power @150% (kW)": flow150.power.toFixed(2),
-    "Max Power (kW)": Math.max(...curve.map(p => p.power)).toFixed(2)
+    "Rated Flow (GPM)": ratedFlow.toFixed(1),
+    "Rated Pressure": meterToUnit(ratedHead, unit).toFixed(2),
+    "Churn Pressure": meterToUnit(churnHead, unit).toFixed(2),
+    "Pressure @150%": meterToUnit(head150, unit).toFixed(2),
+    "Power @Rated (kW)": ratedPower.toFixed(2),
+    "Power @150% (kW)": power150.toFixed(2),
+    "Max Power (kW)": maxPower.toFixed(2)
   });
 }
