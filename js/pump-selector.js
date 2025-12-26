@@ -43,20 +43,26 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-let minDB, maxDB;
+let impellerDB;
 
-async function loadXML(path) {
-    const res = await fetch(path);
-    const text = await res.text();
-    return new DOMParser().parseFromString(text, "text/xml");
+async function loadImpellerDatabase() {
+  impellerDB = await loadXML("data/impeller.xml");
 }
 
-async function loadDatabases() {
-    minDB = await loadXML("data/min.xml");
-    maxDB = await loadXML("data/max.xml");
-}
+loadImpellerDatabase();
 
-loadDatabases();
+function getImpellerRange(modelName) {
+  const pumps = impellerDB.querySelectorAll("Pump");
+  for (let pump of pumps) {
+    const name = pump.querySelector("Model").textContent.trim();
+    if (name === modelName) {
+      const dMin = parseFloat(pump.querySelector("MinImpeller").textContent);
+      const dMax = parseFloat(pump.querySelector("MaxImpeller").textContent);
+      return { dMin, dMax };
+    }
+  }
+  return null;
+}
 
 const modelSelect = document.getElementById("modelSelect");
 
@@ -184,8 +190,12 @@ document.getElementById("calculateBtn").addEventListener("click", () => {
     return alert("Rated flow is outside pump curve range");
   }
 
-  const dMin = 200;  // later from XML
-  const dMax = 250;
+const range = getImpellerRange(model);
+if (!range) {
+    alert("Impeller range not found for selected pump");
+    return;
+}
+const { dMin, dMax } = range;
 
   const impeller = calculateImpellerDiameter(
     ratedHeadM, Hmin, Hmax, dMin, dMax
