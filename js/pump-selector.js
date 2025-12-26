@@ -244,7 +244,7 @@ const { dMin, dMax } = range;
 
 });
 
-function printResults(model, curve, unit, ratedFlow, impeller) {
+function printResults(model, curve, unit, ratedFlow, impeller, dMin, dMax) {
   const sorted = [...curve].sort((a, b) => a.flow - b.flow);
 
   const interp = (flow, key) => {
@@ -261,8 +261,9 @@ function printResults(model, curve, unit, ratedFlow, impeller) {
   const ratedHead = interp(ratedFlow, "head");
   const ratedPower = interp(ratedFlow, "power");
   const churnHead = interp(0, "head");
-  const head150 = interp(ratedFlow * 1.5, "head");
-  const power150 = interp(ratedFlow * 1.5, "power");
+  const flow150 = ratedFlow * 1.5;
+  const head150 = interp(flow150, "head");
+  const power150 = interp(flow150, "power");
   const maxPower = Math.max(...sorted.map(p => p.power));
 
   const resultsPanel = document.getElementById("resultsPanel");
@@ -270,29 +271,33 @@ function printResults(model, curve, unit, ratedFlow, impeller) {
 
   tbody.innerHTML = ""; // clear previous results
 
-  const rows = [
-    ["Pump Model", model],
-    ["Rated Flow (GPM)", ratedFlow.toFixed(1)],
-    ["Rated Pressure (" + unit + ")", meterToUnit(ratedHead, unit).toFixed(2)],
-    ["Churn Pressure (" + unit + ")", meterToUnit(churnHead, unit).toFixed(2)],
-    ["Pressure @150%", meterToUnit(head150, unit).toFixed(2)],
-    ["Power @Rated (kW)", ratedPower.toFixed(2)],
-    ["Power @150% (kW)", power150.toFixed(2)],
-    ["Max Power (kW)", maxPower.toFixed(2)],
-    ["Calculated Impeller Diameter", impeller.toFixed(2)]
-  ];
-
-  rows.forEach(([param, value]) => {
+  // Helper to create row with optional warning class
+  const addRow = (param, value, isWarning = false) => {
     const tr = document.createElement("tr");
     const td1 = document.createElement("td");
     td1.textContent = param;
     const td2 = document.createElement("td");
     td2.textContent = value;
+    if (isWarning) td2.classList.add("warning");
+    else td2.classList.add("safe");
     tr.appendChild(td1);
     tr.appendChild(td2);
     tbody.appendChild(tr);
-  });
+  };
 
-  // Show the panel
-  resultsPanel.style.display = "block";
+  // --- Check warnings ---
+  const impellerWarning = impeller < dMin || impeller > dMax;
+  const flow150Warning = head150 === null;
+
+  addRow("Pump Model", model);
+  addRow("Rated Flow (GPM)", ratedFlow.toFixed(1));
+  addRow("Rated Pressure (" + unit + ")", meterToUnit(ratedHead, unit).toFixed(2));
+  addRow("Churn Pressure (" + unit + ")", meterToUnit(churnHead, unit).toFixed(2));
+  addRow("Pressure @150%", head150 !== null ? meterToUnit(head150, unit).toFixed(2) : "Out of Curve", flow150Warning);
+  addRow("Power @Rated (kW)", ratedPower.toFixed(2));
+  addRow("Power @150% (kW)", power150 !== null ? power150.toFixed(2) : "Out of Curve", flow150Warning);
+  addRow("Max Power (kW)", maxPower.toFixed(2));
+  addRow("Calculated Impeller Diameter", impeller.toFixed(2), impellerWarning);
+
+  resultsPanel.style.display = "block"; // show results
 }
