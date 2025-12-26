@@ -1,4 +1,4 @@
-<Pumps>
+<Impeller>
 <Pump>
 <Model>AM65-26ES</Model>
 <MinImpeller>240</MinImpeller>
@@ -114,4 +114,4 @@
 <MinImpeller>260</MinImpeller>
 <MaxImpeller>328</MaxImpeller>
 </Pump>
-</Pumps>
+</Impeller>
