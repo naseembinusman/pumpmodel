@@ -235,12 +235,19 @@ const { dMin, dMax } = range;
     );
   });
 
-  // Store results
-  flow_r = ratedCurve.map(p => p.flow);
-  head_r = ratedCurve.map(p => p.head);
-  power_r = ratedCurve.map(p => p.power);
-
-  printResults(model, ratedCurve, unit, ratedFlow, impeller);
+    const range = getImpellerRange(model);
+    if (!range) {
+      alert("Impeller range not found");
+      return;
+    }
+    
+    const { dMin, dMax } = range;
+    
+    // calculate impeller as before
+    const impeller = calculateImpellerDiameter(ratedHeadM, Hmin, Hmax, dMin, dMax);
+    
+    // Print results with warnings
+    printResults(model, ratedCurve, unit, ratedFlow, impeller, dMin, dMax);
 
 });
 
