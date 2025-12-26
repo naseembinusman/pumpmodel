@@ -155,3 +155,16 @@ input:focus, select:focus {
 .primary-btn:hover {
     background: #1e40af;
 }
+
+#inputPanel {
+    transition: opacity 0.3s ease, max-height 0.3s ease;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+}
+
+#inputPanel.show {
+    max-height: 1000px; /* large enough to fit content */
+    opacity: 1;
+}
+
