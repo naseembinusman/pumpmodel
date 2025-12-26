@@ -1,6 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
     const flowSelect = document.getElementById("flowSelect");
     const modelSelect = document.getElementById("modelSelect");
+    const inputPanel = document.getElementById("inputPanel");
+    modelSelect.addEventListener("change", () => {
+        if (modelSelect.value) {
+            inputPanel.style.display = "block"; // show panel
+          } else {
+            inputPanel.style.display = "none";  // hide if no model selected
+          }
+    });
 
     fetch("data/pumps.xml")
         .then(res => res.text())
