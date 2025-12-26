@@ -1,9 +1,6 @@
-let flowSelect;
-let modelSelect;
-
 document.addEventListener("DOMContentLoaded", () => {
-    flowSelect = document.getElementById("flowSelect");
-    modelSelect = document.getElementById("modelSelect");
+    const flowSelect = document.getElementById("flowSelect");
+    const modelSelect = document.getElementById("modelSelect");
 
     fetch("data/pumps.xml")
         .then(res => res.text())
@@ -43,6 +40,14 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         })
         .catch(err => console.error("Failed to load XML", err));
+        modelSelect.addEventListener("change", () => {
+            const modelName = modelSelect.value;
+            if (!modelName) return;
+        
+            const minData = getPumpData(minDB, modelName);
+            const maxData = getPumpData(maxDB, modelName);
+            showPanel();
+        });
 });
 
 let minDB, maxDB;
@@ -105,15 +110,6 @@ function showPanel() {
     panel.style.display = "block";
 }
 
-modelSelect.addEventListener("change", () => {
-    const modelName = modelSelect.value;
-    if (!modelName) return;
-
-    const minData = getPumpData(minDB, modelName);
-    const maxData = getPumpData(maxDB, modelName);
-    showPanel();
-});
-
 const HIGH_SPEED_PUMPS = [
     "EHES425250",
     "EHES53250",
@@ -168,7 +164,6 @@ function calculateImpellerDiameter(targetHead, minHead, maxHead, dMin, dMax) {
 
 function applySpeedCorrection(flow, head, power, baseRPM, ratedRPM) {
     const ratio = ratedRPM / baseRPM;
-
     return {
         flow: flow * ratio,
         head: head * ratio * ratio,
@@ -259,44 +254,34 @@ function printResults(model, curve, unit, ratedFlow, impeller, dMin, dMax) {
 
     const ratedHead = interp(ratedFlow, "head");
     const ratedPower = interp(ratedFlow, "power");
-    const churnHead = sorted[0].head;
+    const churnHead = interp(0, "head");
+
     const flow150 = ratedFlow * 1.5;
     const head150 = interp(flow150, "head");
     const power150 = interp(flow150, "power");
+
     const maxPower = Math.max(...sorted.map(p => p.power));
+    const maxFlow = sorted[sorted.length - 1].flow;
 
     const resultsPanel = document.getElementById("resultsPanel");
-    const tbody = document.getElementById("resultsTable").querySelector("tbody");
+    const tbody = document.querySelector("#resultsTable tbody");
+    tbody.innerHTML = "";
 
-    tbody.innerHTML = ""; // clear previous results
-
-    // Helper to create row with optional warning class
-    const addRow = (param, value, isWarning = false) => {
+    const addRow = (param, value, warn = false) => {
         const tr = document.createElement("tr");
-        const td1 = document.createElement("td");
-        td1.textContent = param;
-        const td2 = document.createElement("td");
-        td2.textContent = value;
-        if (isWarning) td2.classList.add("warning");
-        else td2.classList.add("safe");
-        tr.appendChild(td1);
-        tr.appendChild(td2);
+        tr.innerHTML = `<td>${param}</td><td class="${warn ? 'warning' : 'safe'}">${value}</td>`;
         tbody.appendChild(tr);
     };
-
-    // --- Check warnings ---
-    const impellerWarning = impeller < dMin || impeller > dMax;
-    const flow150Warning = head150 === null;
 
     addRow("Pump Model", model);
     addRow("Rated Flow (GPM)", ratedFlow.toFixed(1));
     addRow("Rated Pressure (" + unit + ")", meterToUnit(ratedHead, unit).toFixed(2));
-    addRow("Churn Pressure (" + unit + ")", meterToUnit(churnHead, unit).toFixed(2));
-    addRow("Pressure @150%", head150 !== null ? meterToUnit(head150, unit).toFixed(2) : "Out of Curve", flow150Warning);
-    addRow("Power @Rated (kW)", ratedPower ? ratedPower.toFixed(2) : "N/A");
-    addRow("Power @150% (kW)", power150 !== null ? power150.toFixed(2) : "Out of Curve", flow150Warning);
+    addRow("Churn Pressure (" + unit + ")", churnHead ? meterToUnit(churnHead, unit).toFixed(2) : "N/A");
+    addRow("Pressure @150%", head150 ? meterToUnit(head150, unit).toFixed(2) : "Out of Curve", flow150 > maxFlow);
+    addRow("Power @Rated (kW)", ratedPower?.toFixed(2));
+    addRow("Power @150% (kW)", power150 ? power150.toFixed(2) : "Out of Curve", flow150 > maxFlow);
     addRow("Max Power (kW)", maxPower.toFixed(2));
-    addRow("Calculated Impeller Diameter", impeller.toFixed(2), impellerWarning);
+    addRow("Calculated Impeller Diameter", impeller.toFixed(2), impeller < dMin || impeller > dMax);
 
-    resultsPanel.style.display = "block"; // show results
+    resultsPanel.style.display = "block";
 }
