@@ -9,54 +9,59 @@
 <body>
 
 <div class="container">
-    <div class="card">
-        <h1>Pump Selector</h1>
-        <p class="subtitle">Select rated flow to view available pump models</p>
 
-        <div class="form-row">
-            <div class="form-group">
-                <label for="flowSelect">Rated Flow (GPM)</label>
-                <select id="flowSelect">
-                    <option value="">Select Flow</option>
-                </select>
-            </div>
+  <!-- Selection Panel -->
+  <div class="card">
+    <h1>Pump Selector</h1>
+    <p class="subtitle">Select rated flow and pump model</p>
 
-            <div class="form-group">
-                <label for="modelSelect">Pump Model</label>
-                <select id="modelSelect" disabled>
-                    <option value="">Select Pump Model</option>
-                </select>
-            </div>
-        </div>
-    </div>
-</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Rated Flow (GPM)</label>
+        <select id="flowSelect">
+          <option value="">Select Flow</option>
+        </select>
+      </div>
 
-<div class="card">
-  <h2>Duty Point Inputs</h2>
-
-  <div class="form-column">
-    <div class="form-group">
-      <label>Rated Head / Pressure</label>
-      <div class="input-row">
-        <input type="number" id="ratedHead" placeholder="Enter head">
-        <select id="pressureUnit">
-          <option value="m">m</option>
-          <option value="bar">bar</option>
-          <option value="psi">psi</option>
+      <div class="form-group">
+        <label>Pump Model</label>
+        <select id="modelSelect" disabled>
+          <option value="">Select Pump Model</option>
         </select>
       </div>
     </div>
-
-    <div class="form-group">
-      <label>Rated Speed (RPM)</label>
-      <input type="number" id="ratedRPM" placeholder="Enter RPM (e.g. 2900)">
-    </div>
-
-    <button id="calculateBtn" class="primary-btn">
-      Calculate Pump Selection
-    </button>
   </div>
+
+  <!-- Input Panel -->
+  <div class="card">
+    <h2>Duty Point Inputs</h2>
+
+    <div class="form-column">
+      <div class="form-group">
+        <label>Rated Head / Pressure</label>
+        <div class="input-row">
+          <input type="number" id="ratedHead" placeholder="Enter head">
+          <select id="pressureUnit">
+            <option value="m">m</option>
+            <option value="bar">bar</option>
+            <option value="psi">psi</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Rated Speed (RPM)</label>
+        <input type="number" id="ratedRPM" placeholder="Enter RPM">
+      </div>
+
+      <button id="calculateBtn" class="primary-btn">
+        Calculate Pump Selection
+      </button>
+    </div>
+  </div>
+
 </div>
+
 
 
 <script src="js/pump-selector.js"></script>
