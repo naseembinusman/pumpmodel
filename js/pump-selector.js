@@ -1,60 +1,7 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const flowSelect = document.getElementById("flowSelect");
-    const modelSelect = document.getElementById("modelSelect");
-
-    fetch("data/pumps.xml")
-        .then(res => res.text())
-        .then(xmlText => {
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-            const flows = xmlDoc.getElementsByTagName("Flow");
-
-            // Populate flows
-            for (let flow of flows) {
-                const rate = flow.getAttribute("rate");
-                const opt = document.createElement("option");
-                opt.value = rate;
-                opt.textContent = rate;
-                flowSelect.appendChild(opt);
-            }
-
-            flowSelect.addEventListener("change", () => {
-                modelSelect.innerHTML = '<option value="">-- Select Pump Model --</option>';
-                modelSelect.disabled = true;
-
-                if (!flowSelect.value) return;
-
-                for (let flow of flows) {
-                    if (flow.getAttribute("rate") === flowSelect.value) {
-                        const models = flow.getElementsByTagName("PumpModel");
-                        for (let m of models) {
-                            const opt = document.createElement("option");
-                            opt.value = m.textContent;
-                            opt.textContent = m.textContent;
-                            modelSelect.appendChild(opt);
-                        }
-                        modelSelect.disabled = false;
-                        break;
-                    }
-                }
-            });
-        })
-        .catch(err => console.error("Failed to load XML", err));
-        modelSelect.addEventListener("change", () => {
-            const modelName = modelSelect.value;
-            console.log(`Model: ${modelName}`);
-            if (!modelName){
-                return;
-            }
-        
-            const minData = getPumpData(minDB, modelName);
-            const maxData = getPumpData(maxDB, modelName);
-            showPanel();
-        });
-});
-
 let minDB, maxDB;
 let impellerDB;
+let pumpsDB;
+
 
 async function loadXML(path) {
     const res = await fetch(path);
@@ -62,17 +9,73 @@ async function loadXML(path) {
     return new DOMParser().parseFromString(text, "text/xml");
 }
 
+// end of async function loadXML(path)
+
 async function loadDatabases() {
-    minDB = await loadXML("data/min.xml");
-    maxDB = await loadXML("data/max.xml");
-    impellerDB = await loadXML("data/impeller.xml");
+    console.log("Database loading....");
+    pumpsDB   = await loadXML("https://raw.githubusercontent.com/naseembinusman/pumpmodel/2db3ef30f348b65a1051f9ba1c2ee5ce0d1f2e18/data/pumps.xml");
+    minDB     = await loadXML("https://raw.githubusercontent.com/naseembinusman/pumpmodel/2db3ef30f348b65a1051f9ba1c2ee5ce0d1f2e18/data/min.xml");
+    maxDB     = await loadXML("https://raw.githubusercontent.com/naseembinusman/pumpmodel/2db3ef30f348b65a1051f9ba1c2ee5ce0d1f2e18/data/max.xml");
+    impellerDB = await loadXML("https://raw.githubusercontent.com/naseembinusman/pumpmodel/2db3ef30f348b65a1051f9ba1c2ee5ce0d1f2e18/data/impeller.xml");
+    console.log("Database loaded!");
 }
+
+//end of async function loadDatabases() 
 
 loadDatabases();
 
+document.addEventListener("DOMContentLoaded", async () => {
+  const flowSelect = document.getElementById("flowSelect");
+  const modelSelect = document.getElementById("modelSelect");
+
+  await loadDatabases();   // make sure everything is ready
+
+  const flows = pumpsDB.getElementsByTagName("Flow");
+
+  // Populate flows
+  for (let flow of flows) {
+    const rate = flow.getAttribute("rate");
+    const opt = document.createElement("option");
+    opt.value = rate;
+    opt.textContent = rate;
+    flowSelect.appendChild(opt);
+  }
+
+  flowSelect.addEventListener("change", () => {
+    modelSelect.innerHTML = '<option value="">-- Select Pump Model --</option>';
+    modelSelect.disabled = true;
+
+    if (!flowSelect.value) return;
+
+    for (let flow of flows) {
+      if (flow.getAttribute("rate") === flowSelect.value) {
+        const models = flow.getElementsByTagName("PumpModel");
+        for (let m of models) {
+          const opt = document.createElement("option");
+          opt.value = m.textContent;
+          opt.textContent = m.textContent;
+          modelSelect.appendChild(opt);
+        }
+        modelSelect.disabled = false;
+        break;
+      }
+    }
+  });
+
+  modelSelect.addEventListener("change", () => {
+    const modelName = modelSelect.value;    
+    if (!modelName) return;
+    const minData = getPumpData(minDB, modelName);
+    const maxData = getPumpData(maxDB, modelName);    
+    showPanel();
+  });
+});
+
+// end of document.addEventListener("DOMContentLoaded", async ()
+
 function getImpellerRange(modelName) {
     if (!impellerDB) {
-        alert("Database still loading, please wait");
+        console.log("Database still loading, please wait");
         return;
     }
     const pumps = impellerDB.querySelectorAll("Pump");
@@ -86,6 +89,8 @@ function getImpellerRange(modelName) {
     }
     return null;
 }
+
+// end of function getImpellerRange(modelName)
 
 function getPumpData(xmlDoc, modelName) {
     const pump = xmlDoc.querySelector(`PumpModel[name="${modelName}"]`);
@@ -108,10 +113,19 @@ function getPumpData(xmlDoc, modelName) {
     return points;
 }
 
+// end of function getPumpData(xmlDoc, modelName)
+
 function showPanel() {
     const panel = document.getElementById("inputPanel");
-    panel.style.display = "block";
+
+    panel.classList.add("show");
+
+    // Optional: set default RPM only after showing
+    const rpmInput = document.getElementById("ratedRPM");
+    if (!rpmInput.value) rpmInput.value = 2900;
 }
+
+// end of function showPanel()
 
 const HIGH_SPEED_PUMPS = [
     "EHES425250",
@@ -137,42 +151,43 @@ function meterToUnit(value, unit) {
     return value;
 }
 
-function interpolate(x, x1, y1, x2, y2) {
-    return y1 + ((x - x1) * (y2 - y1)) / (x2 - x1);
+function interpolate(x, x1, y1, x2, y2) {    
+    const m = y1 + ((x - x1) * (y2 - y1)) / (x2 - x1);        
+    return m;
 }
 
-function getValueAtFlow(curve, flow, key) {
-    for (let i = 0; i < curve.length - 1; i++) {
-        if (flow >= curve[i].gpm && flow <= curve[i + 1].gpm) {
-            return interpolate(
-                flow,
-                curve[i].gpm,
-                curve[i][key],
-                curve[i + 1].gpm,
-                curve[i + 1][key]
-            );
+function getValueAtFlow(curve, flow, key) {    
+    for (let i = 0; i < curve.length - 1; i++) {        
+        if (flow >= curve[i].gpm && flow <= curve[i + 1].gpm) {            
+            return interpolate(flow, curve[i].gpm, curve[i][key], curve[i + 1].gpm, curve[i + 1][key]);
         }
     }
+    console.warn("Flow outside curve range");
     return null;
 }
 
-function calculateImpellerDiameter(targetHead, minHead, maxHead, dMin, dMax) {
+// end of function getValueAtFlow(curve, flow, key)
+
+function calculateImpellerDiameter(targetHead, minHead, maxHead, dMin, dMax) {    
     const ratio = (targetHead - minHead) / (maxHead - minHead);
     if (ratio < 0 || ratio > 1) return null;
-
     return Math.sqrt(
         dMin ** 2 + ratio * (dMax ** 2 - dMin ** 2)
     );
 }
 
-function applySpeedCorrection(flow, head, power, baseRPM, ratedRPM) {
-    const ratio = ratedRPM / baseRPM;
+// end of function calculateImpellerDiameter(targetHead, minHead, maxHead, dMin, dMax)
+
+function applySpeedCorrection(flow, head, power, baseRPM, ratedRPM) {    
+    const ratio = ratedRPM / baseRPM;    
     return {
-        flow: flow * ratio,
+        gpm: flow * ratio,       // <- change here
         head: head * ratio * ratio,
-        power: power * ratio * ratio * ratio
+        kw: power * ratio * ratio * ratio  // <- change if you use kw as key
     };
 }
+
+// end of function applySpeedCorrection(flow, head, power, baseRPM, ratedRPM)
 
 document.getElementById("calculateBtn").addEventListener("click", () => {
 
@@ -187,7 +202,7 @@ document.getElementById("calculateBtn").addEventListener("click", () => {
     );
 
     if (!model || !ratedFlow || !ratedRPM || !ratedHeadM) {
-        return alert("Please complete all inputs");
+        return console.log("Please complete all inputs");
     }
 
     const baseRPM = getBaseSpeed(model);
@@ -196,74 +211,106 @@ document.getElementById("calculateBtn").addEventListener("click", () => {
     const maxCurve = getPumpData(maxDB, model);
 
     if (!minCurve || !maxCurve) {
-        return alert("Pump database not found");
+        return console.log("Pump database not found");
     }
 
-    const Hmin = getValueAtFlow(minCurve, ratedFlow, "head");
-    const Hmax = getValueAtFlow(maxCurve, ratedFlow, "head");
+    let rminCurve = minCurve.map(point => {
+        return applySpeedCorrection(
+            point.gpm,   // flow
+            point.head,  // head
+            point.kw,    // power
+            baseRPM,
+            ratedRPM
+        );
+    });
+
+    let rmaxCurve = maxCurve.map(point => {
+        return applySpeedCorrection(
+            point.gpm,   // flow
+            point.head,  // head
+            point.kw,    // power
+            baseRPM,
+            ratedRPM
+        );
+    });
+
+    const Hmin = getValueAtFlow(rminCurve, ratedFlow, "head");
+    const Hmax = getValueAtFlow(rmaxCurve, ratedFlow, "head");
 
     if (Hmin === null || Hmax === null) {
-        return alert("Rated flow is outside pump curve range");
+        return console.log("Rated flow is outside pump curve range");
     }
 
     const range = getImpellerRange(model);
     if (!range) {
-        alert("Impeller range not found for selected pump");
+        console.log("Impeller range not found for selected pump");
         return;
     }
-    const { dMin, dMax } = range;
+    const { dMin, dMax } = range;      
 
     const impeller = calculateImpellerDiameter(ratedHeadM, Hmin, Hmax, dMin, dMax);
 
     if (!impeller) {
-        return alert("Required head is outside impeller range");
+        return console.log("Required head is outside impeller range");
     }
 
-    const ratedCurve = minCurve.map((p, i) => {
-        const hMin = minCurve[i].head;
-        const hMax = maxCurve[i].head;
+    let D = 0.0;
+    let ratedCurve;
 
-        const blendedHead =
-            hMin + (impeller ** 2 - dMin ** 2) /
-            (dMax ** 2 - dMin ** 2) * (hMax - hMin);
+    if (impeller >= ((dMin+dMax)/2)){
+        let flowArr = rmaxCurve.map(p => p.gpm);
+        let headArr = rmaxCurve.map(p => p.head);
+        let powerArr = rmaxCurve.map(p => p.kw);
+        D = findBestD(flowArr, headArr, ratedFlow, ratedHeadM, dMin, dMax, dMax);
+        console.log(`Max curve (D) : ${D}`);
+        ratedCurve = flowArr.map((flow, i) => {
+            return applySpeedCorrection(flow, headArr[i], powerArr[i], dMax, D);
+        });
+    }
 
-        return applySpeedCorrection(p.gpm, blendedHead, p.kw, baseRPM, ratedRPM);
-    });
+    if (impeller < ((dMin+dMax)/2)){
+        let flowArr = rminCurve.map(p => p.gpm);
+        let headArr = rminCurve.map(p => p.head);
+        let powerArr = rminCurve.map(p => p.kw);
+        D = findBestD(flowArr, headArr, ratedFlow, ratedHeadM, dMin, dMax, dMin);        
+        ratedCurve = flowArr.map((flow, i) => {
+            return applySpeedCorrection(flow, headArr[i], powerArr[i], dMin, D);
+        });
+    }
 
     if (!range) {
-        alert("Impeller range not found");
+        console.log("Impeller range not found");
         return;
     }
 
-
-    // Print results with warnings
-    printResults(model, ratedCurve, unit, ratedFlow, impeller, dMin, dMax);
+    printResults(model, ratedCurve, unit, ratedFlow, D, dMin, dMax);
 
 });
 
+// end of document.getElementById("calculateBtn").addEventListener("click", ()
+
 function printResults(model, curve, unit, ratedFlow, impeller, dMin, dMax) {
     const sorted = [...curve].sort((a, b) => a.flow - b.flow);
-
     const interp = (flow, key) => {
         for (let i = 0; i < sorted.length - 1; i++) {
             const p1 = sorted[i];
             const p2 = sorted[i + 1];
-            if (flow >= p1.flow && flow <= p2.flow) {
-                return interpolate(flow, p1.flow, p1[key], p2.flow, p2[key]);
+            if (flow >= p1.gpm && flow <= p2.gpm) {                 
+                return interpolate(flow, p1.gpm, p1[key], p2.gpm, p2[key]);
             }
         }
         return null;
     };
 
     const ratedHead = interp(ratedFlow, "head");
-    const ratedPower = interp(ratedFlow, "power");
+    const ratedPower = interp(ratedFlow, "kw");
     const churnHead = interp(0, "head");
 
     const flow150 = ratedFlow * 1.5;
     const head150 = interp(flow150, "head");
-    const power150 = interp(flow150, "power");
+    const power150 = interp(flow150, "kw");
 
-    const maxPower = Math.max(...sorted.map(p => p.power));
+    const maxPower = Math.max(...sorted.map(p => p.kw));
     const maxFlow = sorted[sorted.length - 1].flow;
 
     const resultsPanel = document.getElementById("resultsPanel");
@@ -271,20 +318,66 @@ function printResults(model, curve, unit, ratedFlow, impeller, dMin, dMax) {
     tbody.innerHTML = "";
 
     const addRow = (param, value, warn = false) => {
+        const icon = warn ? "⚠️" : "";
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${param}</td><td class="${warn ? 'warning' : 'safe'}">${value}</td>`;
+        tr.innerHTML = `<td>${param}</td><td class="${warn ? 'warning' : 'safe'}">${icon} ${value}</td>`;
         tbody.appendChild(tr);
     };
 
     addRow("Pump Model", model);
-    addRow("Rated Flow (GPM)", ratedFlow.toFixed(1));
-    addRow("Rated Pressure (" + unit + ")", meterToUnit(ratedHead, unit).toFixed(2));
-    addRow("Churn Pressure (" + unit + ")", churnHead ? meterToUnit(churnHead, unit).toFixed(2) : "N/A");
-    addRow("Pressure @150%", head150 ? meterToUnit(head150, unit).toFixed(2) : "Out of Curve", flow150 > maxFlow);
-    addRow("Power @Rated (kW)", ratedPower?.toFixed(2));
-    addRow("Power @150% (kW)", power150 ? power150.toFixed(2) : "Out of Curve", flow150 > maxFlow);
-    addRow("Max Power (kW)", maxPower.toFixed(2));
     addRow("Calculated Impeller Diameter", impeller.toFixed(2), impeller < dMin || impeller > dMax);
+    addRow("Rated Flow (GPM)", ratedFlow.toFixed(1));
+    addRow(`Rated Pressure (${unit})`, ratedHead ? meterToUnit(ratedHead, unit).toFixed(2) : "N/A");
+    addRow(`Churn Pressure (${unit})`, churnHead ? meterToUnit(churnHead, unit).toFixed(2) : "N/A");
+    addRow(`Pressure @150% (${unit})`, head150 ? meterToUnit(head150, unit).toFixed(2) : "Out of Curve", flow150 > maxFlow);
+    addRow("Power @Rated (kW/HP)", ratedPower ? formatKW_HP(ratedPower) : "N/A");
+    addRow("Power @150% (kW/HP)", power150 ? formatKW_HP(power150) : "Out of Curve", flow150 > maxFlow);
+    addRow("Max Power (kW/HP)", formatKW_HP(maxPower));
 
-    resultsPanel.style.display = "block";
+    resultsPanel.classList.add("show");
+}
+
+function formatKW_HP(kw) {
+    if (kw == null || isNaN(kw)) return "N/A";
+    const hp = kw / 0.746;
+    return `${kw.toFixed(2)} kW / ${hp.toFixed(2)} HP`;
+}
+
+
+function findBestD(flow, head, target_flow, target_head, dMin, dMax, base_D) {
+    
+    let bestD = null;
+    let minDiff = Infinity;    
+    for (let D = dMin; D <= dMax; D += 0.1) {        
+        const { rflow, rhead } = scaleDiameter(flow, head, base_D, D);
+        let interpolatedHead = interpolateD(rflow, rhead, target_flow);        
+        let diff = Math.abs(interpolatedHead - target_head);        
+        if (diff < minDiff) {
+            minDiff = diff;
+            bestD = D;
+        }
+    }
+    return bestD;
+}
+
+function scaleDiameter(flow, head, base_D, D) {
+    const ratio = D / base_D;
+
+    const rflow = flow.map(f => f * ratio);
+    const rhead = head.map(h => h * ratio * ratio);
+
+    return { rflow, rhead };
+}
+// Simple linear interpolation function
+function interpolateD(flowArr, headArr, target_flow) {
+
+    for (let i = 0; i < flowArr.length - 1; i++) {
+        if (target_flow >= flowArr[i] && target_flow <= flowArr[i + 1]) {
+            let t = (target_flow - flowArr[i]) / (flowArr[i + 1] - flowArr[i]);
+            return headArr[i] + t * (headArr[i + 1] - headArr[i]);
+        }
+    }
+    // If out of range, return closest value
+    if (target_flow < flowArr[0]) return headArr[0];
+    if (target_flow > flowArr[flowArr.length - 1]) return headArr[headArr.length - 1];
 }
