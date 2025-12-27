@@ -42,7 +42,10 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch(err => console.error("Failed to load XML", err));
         modelSelect.addEventListener("change", () => {
             const modelName = modelSelect.value;
-            if (!modelName) return;
+            console.log(`Model: ${modelName}`);
+            if (!modelName){
+                return;
+            }
         
             const minData = getPumpData(minDB, modelName);
             const maxData = getPumpData(maxDB, modelName);
