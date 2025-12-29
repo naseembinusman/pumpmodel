@@ -6,16 +6,15 @@
     <link rel="stylesheet" href="css/style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        /* Ensuring the logo stays centered and fits all screens */
         .header-container {
             text-align: center;
             padding: 20px 0;
             width: 100%;
         }
         .logo {
-            max-width: 100%;    /* Prevents it from being wider than the screen */
-            height: auto;       /* Keeps the aspect ratio */
-            width: 600px;       /* Set a reasonable maximum width */
+            max-width: 100%;
+            height: auto;
+            width: 600px;
             display: block;
             margin: 0 auto;
         }
@@ -32,8 +31,7 @@
 <div class="container">
     <!-- Main Selector Card -->
     <div class="card" id="selectorCard">      
-        <h1>Al Aman UL Listed Pump Selector</h1>
-        <h3>by Naseem Usman</h3>
+        <h1>Al Aman UL Listed Pump Selector</h1>        
         <p class="subtitle">Select rated flow and pump model</p>
 
         <div class="form-row">
@@ -55,7 +53,6 @@
 </div>
 
 <div id="inputResultsWrapper">
-    <!-- Input Panel -->
     <div class="card" id="inputPanel">
         <h2>Duty Point Inputs</h2>
         <div class="form-column">
@@ -77,10 +74,9 @@
             <button id="calculateBtn" class="primary-btn">
                 Calculate Pump Selection
             </button>
-        </div>
-    </div>
+        </div>        
+    </div> 
 
-    <!-- Results Panel -->
     <div class="card" id="resultsPanel">
         <h2>Pump Selection Results</h2>
         <table id="resultsTable">
