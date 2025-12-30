@@ -292,3 +292,16 @@
         max-width: 100%;
     }
 }
+
+.chart-head {
+    width: 800px;
+    height: 1000px;
+    margin: auto;
+}
+
+.chart-power {
+    width: 800px;
+    height: 500px;
+    margin: auto;
+}
+
