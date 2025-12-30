@@ -381,3 +381,205 @@ function interpolateD(flowArr, headArr, target_flow) {
     if (target_flow < flowArr[0]) return headArr[0];
     if (target_flow > flowArr[flowArr.length - 1]) return headArr[headArr.length - 1];
 }
+
+function plotPumpCurve(curve, dMin, dMax, base_D, ratedFlow) {
+    const flow = curve.map(p => p.gpm);
+    const head = curve.map(p => p.head);
+    const power = curve.map(p => p.kw);
+
+    const powerScale = 1;
+    const scaledPower = power.map(p => p * powerScale);
+
+    const flowSmooth = generateFlowRange(flow[0], flow[flow.length - 1], 100);
+    const headSmooth = flowSmooth.map(f => interpolateDi(flow, head, f));
+    const powerSmooth = flowSmooth.map(f => interpolateDi(flow, scaledPower, f));
+    const headMinSmooth = flowSmooth.map(f => interpolateDi(flow, head, f, base_D, dMin));
+    const headMaxSmooth = flowSmooth.map(f => interpolateDi(flow, head, f, base_D, dMax));
+
+    const flow150 = ratedFlow * 1.5;
+    const ratedHead = interpolateDi(flow, head, ratedFlow);
+    const head150 = interpolateDi(flow, head, flow150);
+    const ratedPower = interpolateDi(flow, scaledPower, ratedFlow);
+    const power150 = interpolateDi(flow, scaledPower, flow150);
+    const maxFlow = flow[flow.length - 1];
+
+    const data = {
+        labels: flowSmooth,
+        datasets: [
+            {
+                label: "Head (m) - Base",
+                data: headSmooth,
+                borderColor: "blue",
+                fill: false,
+                pointRadius: 0, 
+            },
+            {
+                label: `Head @ dMin (${dMin} mm)`,
+                data: headMinSmooth,
+                borderColor: "black",
+                fill: false,                
+                pointRadius: 0,
+            },
+            {
+                label: `Head @ dMax (${dMax} mm)`,
+                data: headMaxSmooth,
+                borderColor: "black",
+                fill: false,                
+                pointRadius: 0,
+            }
+        ]
+    };
+
+    const config = {
+        type: "line",
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                title: {
+                    display: true,
+                    text: "Pump Curve (Head)"
+                },
+                annotation: {
+                    annotations: {
+                        ratedHead: {
+                            type: 'point',
+                            xValue: ratedFlow,
+                            yValue: ratedHead,
+                            backgroundColor: 'blue',
+                            radius: 6,
+                            label: {
+                                enabled: true,
+                                content: `${ratedHead.toFixed(2)} m`,
+                                position: 'top'
+                            }
+                        },
+                        head150: {
+                            type: 'point',
+                            xValue: flow150,
+                            yValue: head150,
+                            backgroundColor: 'blue',
+                            radius: 6,
+                            label: {
+                                enabled: true,
+                                content: `${head150.toFixed(2)} m`,
+                                position: 'top'
+                            }
+                        },
+                    }
+                }
+            },
+            scales: {
+                x: {
+                type: 'linear',
+                title: { display: false, text: "Flow (GPM)" },
+                min: 0,
+                max: maxFlow,
+                ticks: {
+                    stepSize: 500,
+                }
+            },
+                y: { title: { display: true, text: "Head (m)" }, min: 0 }
+            }
+        },
+        plugins: [Chart.registry.getPlugin('annotation')]
+    };
+
+    new Chart(document.getElementById("pumpCurveChart"), config);
+
+    const dataPower = {
+        labels: flowSmooth,
+        datasets: [
+            {
+                label: "Power (kW) - Base x3",
+                data: powerSmooth,
+                borderColor: "red",
+                fill: false,
+                borderDash: [5,5],
+                pointRadius: 0,
+            }
+        ]
+    };
+
+    const configPower = {
+        type: "line",
+        data: dataPower,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                title: {
+                    display: false,
+                },
+                annotation: {
+                    annotations: {
+                        ratedPower: {
+                            type: 'point',
+                            xValue: ratedFlow,
+                            yValue: ratedPower,
+                            backgroundColor: 'red',
+                            radius: 6,
+                            label: {
+                                enabled: true,
+                                content: `${(ratedPower/3).toFixed(2)} kW`,
+                                position: 'bottom'
+                            }
+                        },
+                        power150: {
+                            type: 'point',
+                            xValue: flow150,
+                            yValue: power150,
+                            backgroundColor: 'red',
+                            radius: 6,
+                            label: {
+                                enabled: true,
+                                content: `${(power150/3).toFixed(2)} kW`,
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                type: 'linear',
+                title: { display: true, text: "Flow (GPM)" },
+                min: 0,
+                max: maxFlow,
+                ticks: {
+                    stepSize: 500,
+                }
+            },
+                y: { title: { display: true, text: "Power (kW)" }, min: 0 }
+            }
+        },
+        plugins: [Chart.registry.getPlugin('annotation')]
+    };
+
+    new Chart(document.getElementById("pumpPowerChart"), configPower);
+}
+
+function generateFlowRange(start, end, points) {
+    const step = (end - start) / (points - 1);
+    return Array.from({length: points}, (_, i) => start + i * step);
+}
+
+function interpolateDi(flowArr, headArr, targetFlow, base_D = 1, D = 1) {
+    const ratio = D / base_D;
+    const scaledFlow = flowArr.map(f => f * ratio);
+    const scaledHead = headArr.map(h => h * ratio * ratio);
+
+    for (let i = 0; i < scaledFlow.length - 1; i++) {
+        if (targetFlow >= scaledFlow[i] && targetFlow <= scaledFlow[i+1]) {
+            const t = (targetFlow - scaledFlow[i]) / (scaledFlow[i+1] - scaledFlow[i]);
+            return scaledHead[i] + t * (scaledHead[i+1] - scaledHead[i]);
+        }
+    }
+
+    if (targetFlow < scaledFlow[0]) return scaledHead[0];
+    if (targetFlow > scaledFlow[scaledFlow.length - 1]) return scaledHead[scaledHead.length - 1];
+    return null;
+}
